@@ -53,8 +53,10 @@ $LOAD_PATH << "./npm_and_yarn/lib"
 $LOAD_PATH << "./nuget/lib"
 $LOAD_PATH << "./python/lib"
 $LOAD_PATH << "./terraform/lib"
+$LOAD_PATH << "./dmaas/lib"
 
 require "bundler"
+require "json"
 ENV["BUNDLE_GEMFILE"] = File.join(__dir__, "../omnibus/Gemfile")
 Bundler.setup
 
@@ -84,6 +86,8 @@ require "dependabot/npm_and_yarn"
 require "dependabot/nuget"
 require "dependabot/python"
 require "dependabot/terraform"
+require "dmaas_utils"
+require "dmaas"
 
 # GitHub credentials with write permission to the repo you want to update
 # (so that you can create a new branch, commit and pull request).
@@ -98,24 +102,12 @@ $options = {
   write: false,
   lockfile_only: false,
   requirements_update_strategy: nil,
-  commit: nil
+  commit: nil,
+  azure_token: nil,
+  reg_token: nil,
+  github_token:nil,
+  pr_count:-1
 }
-
-unless ENV["LOCAL_GITHUB_ACCESS_TOKEN"].to_s.strip.empty?
-  $options[:credentials] << {
-    "type" => "git_source",
-    "host" => "github.com",
-    "username" => "x-access-token",
-    "password" => ENV["LOCAL_GITHUB_ACCESS_TOKEN"]
-  }
-end
-
-unless ENV["LOCAL_CONFIG_VARIABLES"].to_s.strip.empty?
-  # For example:
-  # "[{\"type\":\"npm_registry\",\"registry\":\
-  #     "registry.npmjs.org\",\"token\":\"123\"}]"
-  $options[:credentials].concat(JSON.parse(ENV["LOCAL_CONFIG_VARIABLES"]))
-end
 
 option_parse = OptionParser.new do |opts|
   opts.banner = "usage: ruby bin/dry-run.rb [OPTIONS] PACKAGE_MANAGER REPO"
@@ -154,9 +146,51 @@ option_parse = OptionParser.new do |opts|
   opts.on("--commit COMMIT", "Commit to fetch dependency files from") do |value|
     $options[:commit] = value
   end
+  opts.on("--azure-token TOKEN", "Azure PAT for accessing azure repos") do |value|
+    $options[:azure_token] = value
+  end
+  opts.on("--registry-token TOKEN", "Azure PAT for accessing private feeds") do |value|
+    $options[:reg_token] = value
+  end
+  opts.on("--github-access-token TOKEN", "Github PAT for accessing github based repos") do |value|
+    $options[:github_token] = value
+  end
+  opts.on("--pr-count COUNT", "Count of the maximum PR's to raise in a single run") do |value|
+    if value.to_i <= 0
+      raise "Invalid PR count"
+    end
+    $options[:pr_count] = value.to_i
+  end
 end
 
 option_parse.parse!
+
+#unless ENV["LOCAL_AZURE_ACCESS_TOKEN"].to_s.strip.empty?
+  $options[:credentials] << {
+    "type" => "git_source",
+    "host" => "dev.azure.com",
+    #"username" => "x-access-token",
+    "password" => $options[:azure_token]
+  }
+#end
+  
+#unless ENV["LOCAL_GITHUB_ACCESS_TOKEN"].to_s.strip.empty?
+  $options[:credentials] << {
+    "type" => "git_source",
+    "host" => "github.com",
+    "password" => $options[:github_token]
+  }
+#end
+
+#unless ENV["LOCAL_CONFIG_VARIABLES"].to_s.strip.empty?
+  # For example:
+  # "[{\"type\":\"npm_registry\",\"registry\":\"registry.npmjs.org\",\"token\":\"123\"}]"
+  #$options[:credentials].concat(JSON.parse(ENV["LOCAL_CONFIG_VARIABLES"]))
+  #$options[:credentials] << {
+  #}
+#end
+
+
 
 # Full name of the GitHub repo you want to create pull requests for
 if ARGV.length < 2
@@ -165,6 +199,7 @@ if ARGV.length < 2
 end
 
 $package_manager, $repo_name = ARGV
+
 
 def show_diff(original_file, updated_file)
   if original_file.content == updated_file.content
@@ -180,15 +215,16 @@ def show_diff(original_file, updated_file)
   updated_tmp_file.write(updated_file.content)
   updated_tmp_file.close
 
-  diff = `diff #{original_tmp_file.path} #{updated_tmp_file.path}`
-  puts
-  puts "    ± #{original_file.name}"
-  puts "    ~~~"
-  puts diff.lines.map { |line| "    " + line }.join("")
-  puts "    ~~~"
+  #diff = `diff #{original_tmp_file.path} #{updated_tmp_file.path}`
+  #puts
+  #puts "    ± #{original_file.name}"
+  #puts "    ~~~"
+  #puts diff.lines.map { |line| "    " + line }.join("")
+  #puts "    ~~~"
 end
 
 def cached_read(name)
+  puts "cache read #{name}"
   raise "Provide something to cache" unless block_given?
   return yield unless $options[:cache_steps].include?(name)
 
@@ -250,7 +286,7 @@ def cached_dependency_files_read
       puts "=> failed to read all dependency files from cache manifest: "\
            "./#{cache_manifest_path}"
     end
-    puts "=> fetching dependency files"
+    puts "=>Fetching dependency files"
     data = yield
     puts "=> dumping fetched dependency files: ./#{cache_dir}"
     manifest_data = data.map do |file|
@@ -286,19 +322,40 @@ end
 # rubocop:enable Metrics/MethodLength
 # rubocop:enable Metrics/AbcSize
 
+dmaas_run = Dependabot::Dmaas::DmaasRun.new(
+  repo: $repo_name,
+  package_manager: $package_manager,
+  repo_token: $options[:azure_token],
+  registry_token: $options[:reg_token],
+  github_token: $options[:github_token],
+  branch: $options[:branch],
+  directory: $options[:directory],
+  dependency: $options[:dependency],
+  commit: $options[:commit],
+)
+
+dmaas_run.process_event
+
 source = Dependabot::Source.new(
-  provider: "github",
+  provider: "azure",
   repo: $repo_name,
   directory: $options[:directory],
   branch: $options[:branch],
   commit: $options[:commit]
 )
 
+$fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).
+    new(source: source, credentials: $options[:credentials])
 $files = cached_dependency_files_read do
-  fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).
-            new(source: source, credentials: $options[:credentials])
-  fetcher.files
+  #puts "GGB:=> fewtche.files"
+  $fetcher.files
 end
+
+Dependabot::Dmaas::Utils.create_npmrc($fetcher.npmrc_content, $options[:reg_token])
+registry_credentials = Dependabot::Dmaas::Utils.get_registry_credentials($fetcher.npmrc_content, $options[:reg_token])
+$options[:credentials].concat(registry_credentials).uniq
+
+# GGB: Print file names
 
 # Parse the dependency files
 puts "=> parsing dependency files"
@@ -397,7 +454,11 @@ end
 
 puts "=> updating #{dependencies.count} dependencies"
 
-# rubocop:disable Metrics/BlockLength
+count = 0;
+if $options[:pr_count] == -1
+  $options[:pr_count] = dependencies.length
+end
+
 dependencies.each do |dep|
   puts "\n=== #{dep.name} (#{dep.version})"
   checker = update_checker_for(dep)
@@ -442,6 +503,7 @@ dependencies.each do |dep|
     next
   end
 
+
   updated_files = generate_dependency_files_for(updated_deps)
 
   # Currently unused but used to create pull requests (from the updater)
@@ -464,6 +526,23 @@ dependencies.each do |dep|
     original_file = $files.find { |f| f.name == updated_file.name }
     show_diff(original_file, updated_file)
   end
+  pull_request_creator = Dependabot::PullRequestCreator.new(
+ source: source,
+ base_commit: $fetcher.commit,
+ dependencies: updated_deps,
+ files: updated_files,
+ credentials: $options[:credentials]
+)
+
+if !pull_request_creator.pull_request_exists
+  count += 1
+end
+
+pull_request_creator.create
+
+if count == $options[:pr_count]
+ break
+end
 end
 # rubocop:enable Metrics/BlockLength
 
