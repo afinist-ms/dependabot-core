@@ -36,6 +36,7 @@ module Dependabot
                 #Add caching of dependency files
                 puts "=> Fetching dependency files"
                 dependency_files = file_fetcher.files
+                file_fetcher.fetch_file_if_present("dmaas.config")
 
                 puts "=> Fetching registry credentials"
                 registry_credentials = Dependabot::Dmaas::Utils.get_registry_credentials(file_fetcher.npmrc_content, registry_token)
@@ -76,6 +77,10 @@ module Dependabot
                     end
 
                     pull_request_creator.create
+
+                    if count == pr_count
+                        break
+                    end
                 end
             end
 
@@ -168,9 +173,9 @@ module Dependabot
                     end
 
                     # Get the requiements to unlock
-                    updated_dependencies << update_checker.updated_dependencies(
+                    updated_dependencies.concat(update_checker.updated_dependencies(
                         requirements_to_unlock: requirements_to_unlock
-                    )
+                    ))
                 end
                 
                 updated_dependencies
@@ -197,7 +202,7 @@ module Dependabot
 
             def generate_updated_dependency_files(updated_dependencies, dependency_files)
                 if updated_dependencies.count == 1
-                    updated_dependency = updated_dependencies.first.first
+                    updated_dependency = updated_dependencies.first
                     puts " => updating #{updated_dependency.name} from " \
                          "#{updated_dependency.previous_version} to " \
                          "#{updated_dependency.version}"
