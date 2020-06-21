@@ -349,17 +349,23 @@ def create_user_npmrc
   puts "reading user .npmrc file"
   home = ENV["HOME"].to_s.strip
   npmrc_path = "#{home}/.npmrc"
+  yarnrc_path = "#{home}/.yarnrc"
   puts "#{npmrc_path}"
 
   File.delete(npmrc_path) if File.exist?(npmrc_path)
+  File.delete(yarnrc_path) if File.exist?(yarnrc_path)
 
+  out_file2 = File.new(yarnrc_path, "a")
   npmrc = $fetcher.npmrc_content.gsub("\r\n", "\n").gsub("\r", "\n").split("\n")
   registries = []
   npmrc.each do |registry| if !registry.start_with?("#") && registry.include?("registry=")
     registries.push(registry.split('=').at(1).gsub("https:", "").gsub("http:", ""))
+    yarnrc_content = "registry " + "\"" + registry.split('=').at(1) + "\"" + "\n"
+    out_file2.write(yarnrc_content)
   end
   end
 
+  out_file2.close
   registries = registries.uniq
 
   registries.each do |reg|
