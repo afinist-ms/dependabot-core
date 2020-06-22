@@ -90,9 +90,6 @@ async function updateDependencyFile(
 
     const dedupedYarnLock = fixDuplicates(lockfileContent, depName);
     fs.writeFileSync(path.join(directory, lockfileName), dedupedYarnLock);
-    return {
-      [lockfileName]: dedupedYarnLock,
-    };
   }
 
   const lockfile = await Lockfile.fromDirectory(directory, reporter);
@@ -106,7 +103,7 @@ async function updateDependencyFile(
   );
 
   return {
-    [lockfileName]: updatedYarnLock,
+    [lockfileName]: updatedYarnLockWithVersion,
   };
 }
 
