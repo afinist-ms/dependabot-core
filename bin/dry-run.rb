@@ -358,6 +358,7 @@ def create_user_npmrc
   registries = []
   npmrc.each do |registry| if !registry.start_with?("#") && registry.include?("registry=")
     registries.push(registry.split('=').at(1).gsub("https:", "").gsub("http:", ""))
+    out_file.write(registry + "\n")
   end
   end
 
@@ -366,7 +367,8 @@ def create_user_npmrc
   
   auth = "_auth=" + Base64.encode64(":" + $options[:reg_token]).gsub("\n", "") + "\n"
   
-  out_file.write(auth) 
+  out_file.write(auth)
+  out_file.write("always-auth=true\n")
   out_file.close
   registries.each do |reg|
     registry_url = reg
