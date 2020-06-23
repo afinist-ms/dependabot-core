@@ -349,36 +349,24 @@ def create_user_npmrc
   puts "reading user .npmrc file"
   home = ENV["HOME"].to_s.strip
   npmrc_path = "#{home}/.npmrc"
-  yarnrc_path = "#{home}/.yarnrc"
   puts "#{npmrc_path}"
 
   File.delete(npmrc_path) if File.exist?(npmrc_path)
-  File.delete(yarnrc_path) if File.exist?(yarnrc_path)
 
-  out_file2 = File.new(yarnrc_path, "a")
   out_file = File.new(npmrc_path, "a")
   npmrc = $fetcher.npmrc_content.gsub("\r\n", "\n").gsub("\r", "\n").split("\n")
   registries = []
   npmrc.each do |registry| if !registry.start_with?("#") && registry.include?("registry=")
     registries.push(registry.split('=').at(1).gsub("https:", "").gsub("http:", ""))
-    registry_value = registry.split('=').at(0)
-    if !registry_value.start_with?("registry")
-      registry_value = "\"" + registry_value + "\""
-    end
-    yarnrc_content = registry_value + " " + "\"" + registry.split('=').at(1) + "\"" + "\n"
-    out_file.write(registry + "\n")
-    out_file2.write(yarnrc_content)
   end
   end
 
-  out_file2.close
   registries = registries.uniq
 
   
   auth = "_auth=" + Base64.encode64(":" + $options[:reg_token]).gsub("\n", "") + "\n"
   
-  out_file.write(auth)
-  out_file.write("always-auth=true\n") 
+  out_file.write(auth) 
   out_file.close
   registries.each do |reg|
     registry_url = reg
@@ -387,17 +375,17 @@ def create_user_npmrc
     "registry" => registry_url[2..-1],
     "token" => Base64.encode64(":" + $options[:reg_token]).gsub("\n", "")
     }
-    registry_username = registry_url[2..-1].split('/').at(0).split('.').at(0)
-    registry_password = Base64.encode64($options[:reg_token]).gsub("\n", "")
-    registry_email = "xyz@abc.com"
-    out_file = File.new(npmrc_path, "a")
-    registry_npmrc_content = registry_url + ":username=" + registry_username + "\n"
-    registry_npmrc_content += registry_url + ":_password=" + registry_password + "\n"
-    registry_npmrc_content += registry_url + ":email=" + registry_email + "\n"
+    #registry_username = registry_url[2..-1].split('/').at(0).split('.').at(0)
+    #registry_password = Base64.encode64($options[:reg_token]).gsub("\n", "")
+    #registry_email = "xyz@abc.com"
+    #out_file = File.new(npmrc_path, "a")
+    #registry_npmrc_content = registry_url + ":username=" + registry_username + "\n"
+    #registry_npmrc_content += registry_url + ":_password=" + registry_password + "\n"
+    #registry_npmrc_content += registry_url + ":email=" + registry_email + "\n"
 
-    out_file.write(registry_npmrc_content)
-    out_file.write(registry_npmrc_content)
-    out_file.close
+    #out_file.write(registry_npmrc_content)
+    #out_file.write(registry_npmrc_content)
+    #out_file.close
   end
 end
 
