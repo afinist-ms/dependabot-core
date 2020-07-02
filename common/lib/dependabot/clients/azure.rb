@@ -159,7 +159,7 @@ module Dependabot
         if pr_description.length > azure_max_length
           truncated_msg = "...\n\n_Description has been truncated_"
           truncate_length = azure_max_length - truncated_msg.length
-          pr_description = pr_description[0..truncate_length] + truncated_msg
+          pr_description = pr_description[0..truncate_length - 1] + truncated_msg
         end
 
         puts "#{pr_description.length}"
