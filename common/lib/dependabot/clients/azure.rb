@@ -162,6 +162,7 @@ module Dependabot
           pr_description = pr_description[0..truncate_length] + truncated_msg
         end
 
+        puts "#{pr_description.length}"
         puts "Create pull request from source: #{source_branch} to target: #{target_branch}"
         puts "PR name:#{pr_name}"
         content = {
