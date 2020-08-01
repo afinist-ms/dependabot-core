@@ -22,9 +22,6 @@ module Dependabot
                     end
             
                     updated_pnpm_lock(pnpm_lock_file)
-            
-                    # @updated_pnpm_lock_content[pnpm_lock_file.name] =
-                    #     post_process_pnpm_lock_file(new_content)
                 end
 
 
@@ -32,20 +29,52 @@ module Dependabot
                         original_path = Dir.pwd
                         Dir.chdir(ENV["PACKAGES_CACHE_FOLDER"].to_s.strip)
                         write_temporary_dependency_files
+
+                        #TODO: use dir, path here
                         lockfile_name = Pathname.new(pnpm_lock.name).basename.to_s
                         path = Pathname.new(pnpm_lock.name).dirname.to_s
-                        response = run_current_rush_update(
+
+                        # response = run_current_rush_update(
+                        #     path: path,
+                        #     lockfile_name: lockfile_name
+                        # ) 
+                        # TODO: try running pnpm_update
+                        response = path == "common/config/rush" ? run_current_rush_update(
+                            path: path,
+                            lockfile_name: lockfile_name
+                        ) : 
+                        run_pnpm_updater(
                             path: path,
                             lockfile_name: lockfile_name
                         )
+
+                        # response = run_current_rush_update(
+                        #     path: path,
+                        #     lockfile_name: lockfile_name
+                        # )
+
                         Dir.chdir(original_path)
                         return response
-                        # updated_files.fetch(lockfile_name)
                 rescue SharedHelpers::HelperSubprocessFailed => e
                     puts "#{e}"
+
+                    # TODO: Handler this error
                 #     handle_pnpm_lock_updater_error(e, pnpm_lock)
                 end
                 
+                def run_pnpm_updater(path:, lockfile_name:)
+                    SharedHelpers.run_helper_subprocess(
+                        command: NativeHelpers.helper_path,
+                        function: "pnpm:updateLockFile",
+                        args: [
+                            Dir.pwd,
+                            path+"/"+lockfile_name
+                            # TODO: why do top level matter here?
+                        # top_level_dependency_updates
+                        ]
+                    )
+                end
+
                 # TODO: Currently works only for a single file (pnpms's shrinkwrap.yaml). Update the params to take a list of file paths that need to be reread 
                 # after we run rush update.
                 def run_rush_updater(path:, lockfile_name:)
