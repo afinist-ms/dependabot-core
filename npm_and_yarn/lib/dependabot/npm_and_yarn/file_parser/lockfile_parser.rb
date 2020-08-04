@@ -16,6 +16,7 @@ module Dependabot
           dependency_set += yarn_lock_dependencies if yarn_locks.any?
           dependency_set += package_lock_dependencies if package_locks.any?
           dependency_set += shrinkwrap_dependencies if shrinkwraps.any?
+          dependency_set += pnpm_lock_dependencies if pnpm_locks.any?
           # dependency_set += pnpm_shrinkwrap_dependencies
           # TODO: Add dependecy for rush/pnpm lock file.
           dependency_set.dependencies
@@ -123,6 +124,30 @@ module Dependabot
           dependency_set
         end
 
+        def pnpm_lock_dependencies
+          dependency_set = Dependabot::NpmAndYarn::FileParser::DependencySet.new
+
+          pnpm_locks.each do |pnpm_lock|
+            parse_pnpm_lock(pnpm_lock).each do |req, details|
+              # TODO: How should dependencies be
+
+              next unless semver_version_for(details["version"])
+              next if alias_package?(req)
+
+              # Note: The DependencySet will de-dupe our dependencies, so they
+              # end up unique by name. That's not a perfect representation of
+              # the nested nature of JS resolution, but it makes everything work
+              # comparably to other flat-resolution strategies
+              dependency_set << Dependency.new(
+                name: req.split(/(?<=\w)\@/).first,
+                version: semver_version_for(details["version"]),
+                package_manager: "npm_and_yarn",
+                requirements: []
+              )
+            end
+          end
+        end
+
         def recursively_fetch_npm_lock_dependencies(object_with_dependencies)
           dependency_set = Dependabot::NpmAndYarn::FileParser::DependencySet.new
 
@@ -201,6 +226,22 @@ module Dependabot
             end
         end
 
+        def parse_pnpm_lock(pnpm_lock)
+          @parsed_pnpm_lock ||= {}
+          @parsed_pnpm_lock[pnpm_lock.name] ||=
+            SharedHelpers.in_a_temporary_directory do
+              File.write("pnpm-lock.yaml", pnpm_lock.content)
+
+              SharedHelpers.run_helper_subprocess(
+                command: NativeHelpers.helper_path,
+                function: "pnpm:parseLockfile",
+                args: [Dir.pwd]
+              )
+            rescue SharedHelpers::HelperSubprocessFailed
+              raise Dependabot::DependencyFileNotParseable, pnpm_lock.path
+            end
+        end
+
         def package_locks
           @package_locks ||=
             dependency_files.
@@ -217,6 +258,12 @@ module Dependabot
           @shrinkwraps ||=
             dependency_files.
             select { |f| f.name.end_with?("npm-shrinkwrap.json") }
+        end
+
+        def pnpm_locks
+          @pnpm_locks ||=
+            dependency_files.
+            select { |f| f.name.end_with?("pnpm-lock.yaml") }
         end
 
         def version_class
