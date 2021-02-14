@@ -134,7 +134,7 @@ module Dependabot
 
       def create_commit(branch_name, base_commit, commit_message, files,
                         author_details)
-         content = {
+        content = {
           refUpdates: [
             { name: "refs/heads/" + branch_name, oldObjectId: base_commit }
           ],
@@ -144,7 +144,7 @@ module Dependabot
               author: author_details,
               changes: files.map do |file|
                 {
-                  changeType: file_exists?(base_commit, file.path) ? "edit": "add",
+                  changeType: file_exists?(base_commit, file.path) ? "edit" : "add",
                   item: { path: file.path },
                   newContent: {
                     content: Base64.encode64(file.content),
@@ -181,6 +181,28 @@ module Dependabot
           source.organization + "/" + source.project +
           "/_apis/git/repositories/" + source.unscoped_repo +
           "/pullrequests?api-version=5.0", content.to_json)
+      end
+
+      def fetch_pull_request(pull_request_id)
+        response = get(source.api_endpoint +
+          source.organization + "/" + source.project +
+          "/_apis/git/pullrequests/" + pull_request_id)
+
+        JSON.parse(response.body)
+      end
+
+      def update_ref(branch_name, old_commit, new_commit)
+        content = [
+          {
+            name: "refs/heads/" + branch_name,
+            oldObjectId: old_commit,
+            newObjectId: new_commit
+          }
+        ]
+
+        post(source.api_endpoint + source.organization + "/" + source.project +
+          "/_apis/git/repositories/" + source.unscoped_repo +
+          "/refs?api-version=5.0", content.to_json)
       end
       # rubocop:enable Metrics/ParameterLists
 
@@ -255,22 +277,21 @@ module Dependabot
         end
       end
 
-      
       def file_exists?(commit, path)
         # Get the file base and directory name
         dir = File.dirname(path)
         basename = File.basename(path)
 
-        # Fetch the contents for the dir and check if there exists any file that matches basename. 
+        # Fetch the contents for the dir and check if there exists any file that matches basename.
         # We ignore any sub-dir paths by rejecting "tree" gitObjectType (which is what ADO uses to specify a directory.)
-        fetch_repo_contents(commit, dir)
-            .reject { |f| f["gitObjectType"] == "tree" }
-            .one? { |f| f["relativePath"] == basename}
-
+        fetch_repo_contents(commit, dir).
+          reject { |f| f["gitObjectType"] == "tree" }.
+          one? { |f| f["relativePath"] == basename }
       rescue Dependabot::Clients::Azure::NotFound
         # ADO throws exception if dir not found. Return false
         false
       end
+
       def truncate_pr_description(pr_description)
         # Azure DevOps only support descriptions up to 4000 characters in UTF-16
         # encoding.
