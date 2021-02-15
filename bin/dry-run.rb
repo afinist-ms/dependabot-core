@@ -61,6 +61,10 @@ Bundler.setup
 require "optparse"
 require "json"
 require "byebug"
+require "logger"
+require "dependabot/logger"
+
+Dependabot.logger = Logger.new($stdout)
 
 require "dependabot/file_fetchers"
 require "dependabot/file_parsers"
@@ -91,6 +95,7 @@ require "dependabot/terraform"
 
 $options = {
   credentials: [],
+  provider: "github",
   directory: "/",
   dependency_names: nil,
   branch: nil,
@@ -98,6 +103,7 @@ $options = {
   write: false,
   clone: false,
   lockfile_only: false,
+  reject_external_code: false,
   requirements_update_strategy: nil,
   commit: nil,
   updater_options: {},
@@ -133,6 +139,10 @@ end
 option_parse = OptionParser.new do |opts|
   opts.banner = "usage: ruby bin/dry-run.rb [OPTIONS] PACKAGE_MANAGER REPO"
 
+  opts.on("--provider PROVIDER", "SCM provider e.g. github, azure, bitbucket") do |value|
+    $options[:provider] = value
+  end
+
   opts.on("--dir DIRECTORY", "Dependency file directory") do |value|
     $options[:directory] = value
   end
@@ -156,6 +166,10 @@ option_parse = OptionParser.new do |opts|
 
   opts.on("--lockfile-only", "Only update the lockfile") do |_value|
     $options[:lockfile_only] = true
+  end
+
+  opts.on("--reject-external-code", "Reject external code") do |_value|
+    $options[:reject_external_code] = true
   end
 
   opts_req_desc = "Options: auto, widen_ranges, bump_versions or "\
@@ -413,7 +427,7 @@ def handle_dependabot_error(error:, dependency:)
 end
 
 source = Dependabot::Source.new(
-  provider: "github",
+  provider: $options[:provider],
   repo: $repo_name,
   directory: $options[:directory],
   branch: $options[:branch],
@@ -445,7 +459,8 @@ parser = Dependabot::FileParsers.for_package_manager($package_manager).new(
   dependency_files: $files,
   repo_contents_path: $repo_contents_path,
   source: source,
-  credentials: $options[:credentials]
+  credentials: $options[:credentials],
+  reject_external_code: $options[:reject_external_code],
 )
 
 dependencies = cached_read("dependencies") { parser.parse }
