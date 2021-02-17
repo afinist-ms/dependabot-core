@@ -66,6 +66,18 @@ RSpec.describe Dependabot::Clients::Azure do
         expect { subject }.to raise_error(Dependabot::Clients::Azure::NotFound)
       end
     end
+
+    context "when response is 400" do
+      before do
+        stub_request(:get, branch_url).
+          with(basic_auth: [username, password]).
+          to_return(status: 400)
+      end
+
+      it "raises a helpful error" do
+        expect { subject }.to raise_error(Dependabot::Clients::Azure::NotFound)
+      end
+    end
   end
 
   describe "#create_commit" do
@@ -191,7 +203,7 @@ RSpec.describe Dependabot::Clients::Azure do
           with(basic_auth: [username, password]).
           to_return({ status: 503 }, { status: 503 }, { status: 503 })
 
-        expect { client.get(base_url) }.to raise_error(Dependabot::Clients::Azure::ServiceNotAvailaible)
+        expect { client.get(base_url) }.to raise_error(Dependabot::Clients::Azure::ServiceNotAvailable)
       end
     end
   end

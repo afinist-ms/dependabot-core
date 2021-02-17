@@ -71,8 +71,8 @@ end
 def build_tmp_repo(project)
   project_path = File.expand_path(File.join("spec/fixtures/projects", project))
 
-  tmp_dir = Dependabot::SharedHelpers::BUMP_TMP_DIR_PATH
-  prefix = Dependabot::SharedHelpers::BUMP_TMP_FILE_PREFIX
+  tmp_dir = Dependabot::Utils::BUMP_TMP_DIR_PATH
+  prefix = Dependabot::Utils::BUMP_TMP_FILE_PREFIX
   Dir.mkdir(tmp_dir) unless Dir.exist?(tmp_dir)
   tmp_repo = Dir.mktmpdir(prefix, tmp_dir)
   tmp_repo_path = Pathname.new(tmp_repo).expand_path
@@ -92,7 +92,8 @@ end
 def project_dependency_files(project)
   project_path = File.expand_path(File.join("spec/fixtures/projects", project))
   Dir.chdir(project_path) do
-    files = Dir.glob("**/*")
+    # NOTE: Include dotfiles (e.g. .npmrc)
+    files = Dir.glob("**/*", File::FNM_DOTMATCH)
     files = files.select { |f| File.file?(f) }
     files.map do |filename|
       content = File.read(filename)
