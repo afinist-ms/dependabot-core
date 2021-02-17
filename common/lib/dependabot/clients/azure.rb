@@ -10,11 +10,11 @@ module Dependabot
 
       class InternalServerError < StandardError; end
 
-      class ServiceNotAvailaible < StandardError; end
+      class ServiceNotAvailable < StandardError; end
 
       class BadGateway < StandardError; end
 
-      RETRYABLE_ERRORS = [InternalServerError, BadGateway, ServiceNotAvailaible].freeze
+      RETRYABLE_ERRORS = [InternalServerError, BadGateway, ServiceNotAvailable].freeze
 
       MAX_PR_DESCRIPTION_LENGTH = 3999
 
@@ -46,6 +46,8 @@ module Dependabot
           source.organization + "/" + source.project +
           "/_apis/git/repositories/" + source.unscoped_repo +
           "/stats/branches?name=" + branch)
+
+        raise NotFound if response.status == 400
 
         JSON.parse(response.body).fetch("commit").fetch("commitId")
       end
@@ -200,7 +202,7 @@ module Dependabot
 
           raise InternalServerError if response.status == 500
           raise BadGateway if response.status == 502
-          raise ServiceNotAvailaible if response.status == 503
+          raise ServiceNotAvailable if response.status == 503
         end
 
         raise NotFound if response.status == 404
