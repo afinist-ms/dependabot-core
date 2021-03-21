@@ -1,3 +1,234 @@
+## v0.138.1, 17 March 2021
+
+- Bundler: Add instrumentation to capture the bundler verison being used
+- Bundler: [Prerelease] Add a stubbed out native helper for Bundler 2
+- Bundler: [Prerelease] Allow the v2 native helper to be invoked via an options argument
+
+## v0.138.0, 16 March 2021
+
+- Go: Bump golang to v1.16.2
+
+## v0.137.2, 16 March 2021
+
+- Bundler: Fix permission error when vendoring gems
+- Bump friendsofphp/php-cs-fixer in /composer/helpers/v1
+- Bump friendsofphp/php-cs-fixer in /composer/helpers/v2
+
+## v0.137.1, 15 March 2021
+
+- Bundler: Install dependabot-core's gems using Bundler v2 (unused for updates)
+
+## v0.137.0, 15 March 2021
+
+- Bump npm from 7.5.4 to 7.6.1
+- Python: Add python versions 3.9.2, 3.8.8, 3.7.10 and 3.6.13
+- Bundler: Run v1 native helpers with bundler v1
+- Bump composer/composer from 2.0.10 to 2.0.11 in /composer/helpers/v2
+- Bump eslint-config-prettier from 8.0.0 to 8.1.0 in /npm_and_yarn/helpers
+- Bump phpstan/phpstan from 0.12.78 to 0.12.81 in /composer/helpers/v2
+- Bump phpstan/phpstan from 0.12.78 to 0.12.81 in /composer/helpers/v1
+
+## v0.136.0, 8 March 2021
+
+- Bundler: Run Bundler v1 native helpers with an explicit version setting the
+  stage for Bundler v2 support (take 2) #3223
+- Bundler: Fix gemspec sanitization bug when heredoc has methods chained onto it
+  #3220
+
+## v0.135.0, 4 March 2021
+
+- Gracefully handle cargo version conflicts #3213
+- Pull request updater for azure client #3153 (@milind009)
+
+## v0.134.2, 3 March 2021
+
+- Revert: Run Bundler v1 native helpers with an explicit version
+- Update rubocop requirement from ~> 1.10.0 to ~> 1.11.0 in /common
+- Bump @npmcli/arborist from 2.2.4 to 2.2.6 in /npm_and_yarn/helpers
+
+## v0.134.1, 2 March 2021
+
+- Run Bundler v1 native helpers with an explicit version setting the stage for
+  Bundler v2 support
+
+## v0.134.0, 1 March 2021
+
+- Introduce `Dependabot::PullRequestCreator::Message` as an alternative to `Dependabot::PullRequestCreator::MessageBuilder`
+- Test: convert Bundler specs to projects
+- Test: fix npm6 fixture
+- Bump composer/composer from 2.0.9 to 2.0.10 in /composer/helpers/v2
+- Bump @npmcli/arborist from 2.2.3 to 2.2.4 in /npm_and_yarn/helpers
+- Bump eslint-config-prettier from 7.2.0 to 8.0.0 in /npm_and_yarn/helpers
+- Bump phpstan/phpstan from 0.12.77 to 0.12.78 in /composer/helpers/v2
+- Bump phpstan/phpstan from 0.12.77 to 0.12.78 in /composer/helpers/v1
+- Bump cython from 0.29.21 to 0.29.22 in /python/helpers
+
+## v0.133.6, 22 February 2021
+
+- npm: Use CLI for peer dep conflicts, and default to it without lockfile
+- Bump @npmcli/arborist from 2.2.2 to 2.2.3 in /npm_and_yarn/helpers
+
+## v0.133.5, 19 February 2021
+
+- Python: Raise UnexpectedExternalCode if `reject_external_code: true`, regardless of the update involving external code
+- Hex: Raise UnexpectedExternalCode if `reject_external_code: true`, regardless of the update involving external code
+- JS: fix npm file updater spec
+
+## v0.133.4, 18 February 2021
+
+- Elixir: support projects using Nerves extensions (@fhunleth and @cblavier)
+- Common: Insert zero-width space in @mentions when sanitizing github pull request descriptions
+- Azure: raise NotFound error when response status code is 400 for fetch_commit (@milind009)
+- JS: Switch from yarn to npm for helper deps
+- JS: Convert spec fixtures to project based
+- Bump phpstan/phpstan from 0.12.74 to 0.12.77 in /composer/helpers/v1
+- Bump phpstan/phpstan from 0.12.76 to 0.12.77 in /composer/helpers/v2
+- Update rubocop requirement from ~> 1.9.0 to ~> 1.10.0 in /common
+
+## v0.133.3, 16 February 2021
+
+- common: when detecting changes in vendored dependencies, assume resources are binary
+- Bump phpstan/phpstan from 0.12.74 to 0.12.76 in /composer/helpers/v2
+- Bump eslint from 7.19.0 to 7.20.0 in /npm_and_yarn/helpers
+- Bump @npmcli/arborist from 2.2.1 to 2.2.2 in /npm_and_yarn/helpers
+- Only run flake8 on python helpers folder
+- Add option to profile dry-run using Stackprof
+- Fix go_modules flaky spec accessing archive.org
+- Restore npm6/7 yanked version spec
+- npm: Convert FileParser specs to project fixtures
+
+## v0.133.2, 11 February 2021
+
+- Docker: Fix media types in Accept header for Docker Registry
+- Convert LockfileParserSpec to use project based fixtures
+
+## v0.133.1, 10 February 2021
+
+- npm: fix npm 7 workspace bug when updating nested packages
+- npm: correctly parse npm 7 version from package dependencies
+- npm: Refactor NpmLockfileUpdater
+- Update npm from 7.5.2 to 7.5.3
+- Bump @npmcli/arborist from 2.2.0 to 2.2.1 in /npm_and_yarn/helpers
+- Bump phpstan/phpstan from 0.12.71 to 0.12.74 in /composer/helpers/v2
+- Bump phpstan/phpstan from 0.12.71 to 0.12.74 in /composer/helpers/v1
+
+## v0.133.0, 9 February 2021
+
+- Bundler: Raise UnexpectedExternalCode if `reject_external_code: true` and the update involves external code
+
+## v0.132.0, 8 February 2021
+
+- npm: Add support for updating npm 7 lockfiles
+
+## v0.131.3, 8 February 2021
+
+- Nuget: handle version ranges in VersionFinder
+
+## v0.131.2, 5 February 2021
+
+- Maven: handle invalid pom references
+- Maven: Raise DependencyFileNotResolvable when invalid repo is specified
+- Bump @npmcli/arborist from 2.1.1 to 2.2.0 in /npm_and_yarn/helpers
+
+## v0.131.1, 4 February 2021
+
+- Composer: handle invalid version string
+- Composer: Don't raise when adding temp platform extensions
+- Composer: Handle version constraints with both caret and dev postfix
+- Docker: Use the correct Docker digest when checking for updates
+
+## v0.131.0, 4 February 2021
+
+- Composer: handle unreachable path vcs source
+- Nuget: Parse floating notation when used in range
+- Nuget: Ignore `Remove` ProjectReferences
+- Gradle Kotlin DSL: Add Support for Named URL Parameter in Maven Repository (@hfhbd)
+- Python: Add python 3.8.7 (@Parnassius)
+- npm: Refactor specs to use project based fixtures
+- Bump composer/composer from 1.10.19 to 1.10.20 in /composer/helpers/v1
+- Bump composer/composer from 2.0.8 to 2.0.9 in /composer/helpers/v2
+- Bump phpstan/phpstan from 0.12.68 to 0.12.71 in /composer/helpers/v1 and /composer/helpers/v2
+- Bump friendsofphp/php-cs-fixer in /composer/helpers/v2 and /composer/helpers/v1
+- Update simplecov-console requirement from ~> 0.8.0 to ~> 0.9.1
+- Bump @npmcli/arborist from 2.0.6 to 2.1.1 in /npm_and_yarn/helpers
+- Update rubocop requirement from ~> 1.8.0 to ~> 1.9.0 in /common
+
+## v0.130.3, 25 January 2021
+
+- Extract yarn/npm lockfile updater specs from FileUpdater specs
+- Bump @npmcli/arborist from 2.0.5 to 2.0.6 in /npm_and_yarn/helpers
+- Gomod: go-1.15.7
+- Composer: Check for explicit composer plugin version before invalid plugins
+- Update eslint prettier extension
+- Fix JS debugging in vscode
+
+## v0.130.2, 19 January 2021
+
+- gradle: repository url by assignment
+- Bump pip-tools from 5.4.0 to 5.5.0
+- Bump eslint from 7.17.0 to 7.18.0 in /npm_and_yarn/helpers
+- Bump golang.org/x/mod from 0.4.0 to 0.4.1 in /go_modules/helpers
+- Bump @npmcli/arborist from 2.0.3 to 2.0.5 in /npm_and_yarn/helpers
+- Bump phpstan/phpstan from 0.12.66 to 0.12.68 in /composer/helpers/v2
+- Bump phpstan/phpstan from 0.12.66 to 0.12.68 in /composer/helpers/v1
+
+## v0.130.1, 14 January 2021
+
+- npm: detect npm v7 lockfiles
+- npm: Install npm v7 (unused) alongside npm v6
+- JS: Upgrade node to v14.15.4
+- Common: Added require "set" to utils.rb (@JohannesEH)
+- Sanitize `@mentions` by wrapping them in codeblocks preventing notifications when replying to PR email notifications
+
+## v0.130.0, 13 January 2021
+
+- npm: Support GitLab format npm registry (@danoe)
+- npm: move native helpers to npm6 namespace
+- Python: Use release version of pyenv (@ulgens)
+- Gradle: Add support for Kotlin Plugins (@busches)
+- Composer: Use composer v1 when any of the requirements are invalid on v2
+- docker-dev-shell: exclude dry-run files
+- Bump @npmcli/arborist from 2.0.2 to 2.0.3 in /npm_and_yarn/helpers
+- Bump npm from 6.14.10 to 6.14.11 in /npm_and_yarn/helpers
+- Bump phpstan/phpstan from 0.12.64 to 0.12.66 in /composer/helpers/v1 and /composer/helpers/v2
+- Update rubocop requirement from ~> 1.7.0 to ~> 1.8.0 in /common
+
+## v0.129.5, 7 January 2021
+
+- Bundler: support ruby 2.7 and 3.0 version requirements in gemspecs
+- Update parser requirement from ~> 2.5 to >= 2.5, < 4.0 in /common
+
+## v0.129.4, 6 January 2021
+
+- go_modules: raise Dependabot::GitDependenciesNotReachable for dependencies missing from github.com
+- go_modules: fix regression when parsing go.mod files without dependencies
+- Bitbucket: support for PR creation (@iinuwa)
+
+## v0.129.3, 5 January 2021
+
+- Bump eslint-plugin-prettier from 3.3.0 to 3.3.1 in /npm_and_yarn/helpers
+- Gradle: Handle missing required manifest file
+- Actions: Accept shortref hashes
+
+## v0.129.2, 4 January 2021
+
+- go_modules: return tidied `go.mod` contents directly
+- go_modules: fix nested module detection from a monorepo root
+- go_modules: stop parsing indirect dependencies (previous: parsed but not updated)
+- gradle: fix whitespace matching in settings (@bountin)
+- Add token support for BitBucket (@iinuwa)
+- Add retries for Azure client (@GiriB)
+- CI: Add Python flake8 linting
+- Bundler: fix bundler gem when invoked as standalone gem
+- Bump friendsofphp/php-cs-fixer in /composer/helpers/v2
+- Bump friendsofphp/php-cs-fixer in /composer/helpers/v1
+- Bump node-notifier from 8.0.0 to 8.0.1 in /npm_and_yarn/helpers
+- Update rubocop requirement from ~> 1.6.0 to ~> 1.7.0 in /common
+- Update simplecov requirement from ~> 0.20.0 to ~> 0.21.0 in /common
+- Bump eslint from 7.16.0 to 7.17.0 in /npm_and_yarn/helpers
+- Bump phpstan/phpstan from 0.12.63 to 0.12.64 in /composer/helpers/v2
+- Bump phpstan/phpstan from 0.12.63 to 0.12.64 in /composer/helpers/v1
+
 ## v0.129.1, 21 December 2020
 
 - Bump phpstan/phpstan from 0.12.59 to 0.12.63
@@ -74,7 +305,7 @@
 
 ## v0.125.6, 27 November 2020
 
-- Pip compile: raise DependencyFileNotRqesolvable error when initial manifest
+- Pip compile: raise DependencyFileNotResolvable error when initial manifest
   files are unresolvable
 - JS: Handle rate limited npm package requests
 - Go mod: verify Dependabot::GitDependenciesNotReachable from versioned

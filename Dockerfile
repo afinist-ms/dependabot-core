@@ -54,12 +54,13 @@ RUN apt-get update \
 
 # Install Ruby 2.6.6, update RubyGems, and install Bundler
 ENV BUNDLE_SILENCE_ROOT_WARNING=1
-RUN apt-get install -y software-properties-common \
+RUN apt-get update && apt-get install -y software-properties-common \
   && apt-add-repository ppa:brightbox/ruby-ng \
   && apt-get update \
   && apt-get install -y ruby2.6 ruby2.6-dev \
-  && gem update --system 3.0.3 \
-  && gem install bundler -v 1.17.3 --no-document
+  && gem update --system 3.2.14 \
+  && gem install bundler -v 1.17.3 --no-document \
+  && gem install bundler -v 2.2.11 --no-document
 
 
 ### PYTHON
@@ -68,20 +69,17 @@ RUN apt-get install -y software-properties-common \
 ENV PYENV_ROOT=/usr/local/.pyenv \
   PATH="/usr/local/.pyenv/bin:$PATH"
 RUN git clone https://github.com/pyenv/pyenv.git /usr/local/.pyenv \
-  && cd /usr/local/.pyenv && git checkout 2bf6111fa0bad10b78c3130dfab497c8c3dcd2b6 && cd - \
-  && pyenv install 3.9.1 \
+  && cd /usr/local/.pyenv && git checkout 9ee109b66148bc39a685926050b7b56cb4bb184b && cd - \
+  && pyenv install 3.9.2 \
   && pyenv install 2.7.18 \
-  && pyenv global 3.9.1
+  && pyenv global 3.9.2
 
 
 ### JAVASCRIPT
 
-# Install Node 10.0 and Yarn
-RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - \
-  && apt-get install -y nodejs \
-  && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
-  && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
-  && apt-get update && apt-get install -y yarn
+# Install Node 14.0 and npm (updated after elm)
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \
+  && apt-get install -y nodejs
 
 
 ### ELM
@@ -94,6 +92,10 @@ RUN npm install elm@0.18.0 \
   && mv elm /usr/local/bin/elm19 \
   && rm -f binaries-for-linux.tar.gz \
   && rm -rf ~/.npm
+
+# NOTE: This is a hack to get around the fact that elm 18 fails to install with
+# npm 7, we should look into deprecating elm 18
+RUN npm install -g npm@v7.6.1
 
 
 ### PHP
@@ -136,9 +138,9 @@ RUN add-apt-repository ppa:ondrej/php \
 ### GO
 
 # Install Go and dep
-ARG GOLANG_VERSION=1.15.2
-ARG GOLANG_CHECKSUM=b49fda1ca29a1946d6bb2a5a6982cf07ccd2aba849289508ee0f9918f6bb4552
-RUN curl -o go.tar.gz https://dl.google.com/go/go${GOLANG_VERSION}.linux-amd64.tar.gz \
+ARG GOLANG_VERSION=1.16.2
+ARG GOLANG_CHECKSUM=542e936b19542e62679766194364f45141fde55169db2d8d01046555ca9eb4b8
+RUN curl --http1.1 -o go.tar.gz https://dl.google.com/go/go${GOLANG_VERSION}.linux-amd64.tar.gz \
   && echo "$GOLANG_CHECKSUM go.tar.gz" | sha256sum -c - \
   && tar -xzf go.tar.gz -C /opt \
   && mkdir /opt/go/gopath \
@@ -193,7 +195,8 @@ ENV DEPENDABOT_NATIVE_HELPERS_PATH="/opt" \
 RUN bash /opt/terraform/helpers/build /opt/terraform && \
   bash /opt/python/helpers/build /opt/python && \
   bash /opt/dep/helpers/build /opt/dep && \
-  bash /opt/bundler/helpers/build /opt/bundler && \
+  mkdir -p /opt/bundler/v1 && bash /opt/bundler/helpers/v1/build /opt/bundler/v1 && \
+  mkdir -p /opt/bundler/v2 && bash /opt/bundler/helpers/v2/build /opt/bundler/v2 && \
   bash /opt/go_modules/helpers/build /opt/go_modules && \
   bash /opt/npm_and_yarn/helpers/build /opt/npm_and_yarn && \
   bash /opt/hex/helpers/build /opt/hex && \

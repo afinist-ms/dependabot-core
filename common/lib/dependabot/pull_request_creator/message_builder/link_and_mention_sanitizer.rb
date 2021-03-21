@@ -45,9 +45,13 @@ module Dependabot
 
         def sanitize_mentions(doc)
           doc.walk do |node|
-            if !parent_node_link?(node) && node.type == :text &&
+            if node.type == :text &&
                node.string_content.match?(MENTION_REGEX)
-              nodes = build_mention_nodes(node.string_content)
+              nodes = if !parent_node_link?(node)
+                        build_mention_nodes(node.string_content)
+                      else
+                        build_mention_link_text_nodes(node.string_content)
+                      end
 
               nodes.each do |n|
                 node.insert_before(n)
@@ -113,13 +117,27 @@ module Dependabot
           nodes
         end
 
+        def build_mention_link_text_nodes(text)
+          code_node = CommonMarker::Node.new(:code)
+          code_node.string_content = insert_zero_width_space_in_mention(text)
+          [code_node]
+        end
+
         def create_link_node(url, text)
           link_node = CommonMarker::Node.new(:link)
-          text_node = CommonMarker::Node.new(:text)
+          code_node = CommonMarker::Node.new(:code)
           link_node.url = url
-          text_node.string_content = text
-          link_node.append_child(text_node)
+          code_node.string_content = insert_zero_width_space_in_mention(text)
+          link_node.append_child(code_node)
           link_node
+        end
+
+        # NOTE: Add a zero-width space between the @ and the username to prevent
+        # email replies on dependabot pull requests triggering notifications to
+        # users who've been mentioned in changelogs etc. PR email replies parse
+        # the content of the pull request body in plain text.
+        def insert_zero_width_space_in_mention(mention)
+          mention.sub("@", "@\u200B").encode("utf-8")
         end
 
         def parent_node_link?(node)

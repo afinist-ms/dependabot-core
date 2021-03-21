@@ -19,7 +19,8 @@ RSpec.describe Dependabot::Bundler::UpdateChecker::LatestVersionFinder do
         "host" => "github.com",
         "username" => "x-access-token",
         "password" => "token"
-      }]
+      }],
+      options: {}
     )
   end
   let(:dependency_files) { [gemfile, lockfile] }
@@ -241,18 +242,18 @@ RSpec.describe Dependabot::Bundler::UpdateChecker::LatestVersionFinder do
       before do
         # We only need to stub out the version callout since it would
         # otherwise call out to the internet in a shell command
-        allow(Dependabot::SharedHelpers).
-          to receive(:run_helper_subprocess).
+        allow(Dependabot::Bundler::NativeHelpers).
+          to receive(:run_bundler_subprocess).
           with({
-                 command: Dependabot::Bundler::NativeHelpers.helper_path,
+                 bundler_version: "1",
                  function: "dependency_source_type",
                  args: anything
                }).and_call_original
 
-        allow(Dependabot::SharedHelpers).
-          to receive(:run_helper_subprocess).
+        allow(Dependabot::Bundler::NativeHelpers).
+          to receive(:run_bundler_subprocess).
           with({
-                 command: Dependabot::Bundler::NativeHelpers.helper_path,
+                 bundler_version: "1",
                  function: "private_registry_versions",
                  args: anything
                }).
@@ -297,10 +298,10 @@ RSpec.describe Dependabot::Bundler::UpdateChecker::LatestVersionFinder do
         end
 
         before do
-          allow(Dependabot::SharedHelpers).
-            to receive(:run_helper_subprocess).
+          allow(Dependabot::Bundler::NativeHelpers).
+            to receive(:run_bundler_subprocess).
             with({
-                   command: Dependabot::Bundler::NativeHelpers.helper_path,
+                   bundler_version: "1",
                    function: "private_registry_versions",
                    args: anything
                  }).
@@ -330,10 +331,10 @@ RSpec.describe Dependabot::Bundler::UpdateChecker::LatestVersionFinder do
         end
 
         before do
-          allow(Dependabot::SharedHelpers).
-            to receive(:run_helper_subprocess).
+          allow(Dependabot::Bundler::NativeHelpers).
+            to receive(:run_bundler_subprocess).
             with({
-                   command: Dependabot::Bundler::NativeHelpers.helper_path,
+                   bundler_version: "1",
                    function: "private_registry_versions",
                    args: anything
                  }).
@@ -363,10 +364,10 @@ RSpec.describe Dependabot::Bundler::UpdateChecker::LatestVersionFinder do
         end
 
         before do
-          allow(Dependabot::SharedHelpers).
-            to receive(:run_helper_subprocess).
+          allow(Dependabot::Bundler::NativeHelpers).
+            to receive(:run_bundler_subprocess).
             with({
-                   command: Dependabot::Bundler::NativeHelpers.helper_path,
+                   bundler_version: "1",
                    function: "private_registry_versions",
                    args: anything
                  }).
@@ -385,10 +386,10 @@ RSpec.describe Dependabot::Bundler::UpdateChecker::LatestVersionFinder do
 
       context "that doesn't have details of the gem" do
         before do
-          allow(Dependabot::SharedHelpers).
-            to receive(:run_helper_subprocess).
+          allow(Dependabot::Bundler::NativeHelpers).
+            to receive(:run_bundler_subprocess).
             with({
-                   command: Dependabot::Bundler::NativeHelpers.helper_path,
+                   bundler_version: "1",
                    function: "private_registry_versions",
                    args: anything
                  }).
@@ -540,18 +541,18 @@ RSpec.describe Dependabot::Bundler::UpdateChecker::LatestVersionFinder do
       before do
         # We only need to stub out the version callout since it would
         # otherwise call out to the internet in a shell command
-        allow(Dependabot::SharedHelpers).
-          to receive(:run_helper_subprocess).
+        allow(Dependabot::Bundler::NativeHelpers).
+          to receive(:run_bundler_subprocess).
           with({
-                 command: Dependabot::Bundler::NativeHelpers.helper_path,
+                 bundler_version: "1",
                  function: "dependency_source_type",
                  args: anything
                }).and_call_original
 
-        allow(Dependabot::SharedHelpers).
-          to receive(:run_helper_subprocess).
+        allow(Dependabot::Bundler::NativeHelpers).
+          to receive(:run_bundler_subprocess).
           with({
-                 command: Dependabot::Bundler::NativeHelpers.helper_path,
+                 bundler_version: "1",
                  function: "private_registry_versions",
                  args: anything
                }).
