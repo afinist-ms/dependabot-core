@@ -6,25 +6,28 @@ require "vcr"
 require "byebug"
 require "simplecov"
 require "simplecov-console"
+require "stackprof"
 
 require "dependabot/dependency_file"
 require_relative "dummy_package_manager/dummy"
 
-SimpleCov::Formatter::Console.output_style = "block"
-SimpleCov.formatter = if ENV["CI"]
-                        SimpleCov::Formatter::Console
-                      else
-                        SimpleCov::Formatter::HTMLFormatter
-                      end
+if ENV["COVERAGE"]
+  SimpleCov::Formatter::Console.output_style = "block"
+  SimpleCov.formatter = if ENV["CI"]
+                          SimpleCov::Formatter::Console
+                        else
+                          SimpleCov::Formatter::HTMLFormatter
+                        end
 
-SimpleCov.start do
-  add_filter "/spec/"
+  SimpleCov.start do
+    add_filter "/spec/"
 
-  enable_coverage :branch
-  minimum_coverage line: 80, branch: 70
-  # TODO: Enable minimum coverage per file once outliers have been increased
-  # minimum_coverage_by_file 80
-  refuse_coverage_drop
+    enable_coverage :branch
+    minimum_coverage line: 80, branch: 70
+    # TODO: Enable minimum coverage per file once outliers have been increased
+    # minimum_coverage_by_file 80
+    refuse_coverage_drop
+  end
 end
 
 RSpec.configure do |config|
@@ -32,6 +35,18 @@ RSpec.configure do |config|
   config.order = :rand
   config.mock_with(:rspec) { |mocks| mocks.verify_partial_doubles = true }
   config.raise_errors_for_deprecations!
+
+  config.around do |example|
+    if example.metadata[:profile]
+      example_name = example.metadata[:full_description].strip.gsub(/[\s#\.-]/, "_").gsub("::", "_").downcase
+      name = "../tmp/stackprof_#{example_name}.dump"
+      StackProf.run(mode: :wall, interval: 100, raw: true, out: name) do
+        example.run
+      end
+    else
+      example.run
+    end
+  end
 end
 
 VCR.configure do |config|
@@ -68,11 +83,11 @@ end
 # @param project [String] the project directory, located in
 # "spec/fixtures/projects"
 # @return [String] the path to the new temp repo.
-def build_tmp_repo(project)
-  project_path = File.expand_path(File.join("spec/fixtures/projects", project))
+def build_tmp_repo(project, path: "projects")
+  project_path = File.expand_path(File.join("spec/fixtures", path, project))
 
-  tmp_dir = Dependabot::SharedHelpers::BUMP_TMP_DIR_PATH
-  prefix = Dependabot::SharedHelpers::BUMP_TMP_FILE_PREFIX
+  tmp_dir = Dependabot::Utils::BUMP_TMP_DIR_PATH
+  prefix = Dependabot::Utils::BUMP_TMP_FILE_PREFIX
   Dir.mkdir(tmp_dir) unless Dir.exist?(tmp_dir)
   tmp_repo = Dir.mktmpdir(prefix, tmp_dir)
   tmp_repo_path = Pathname.new(tmp_repo).expand_path
@@ -91,8 +106,12 @@ end
 
 def project_dependency_files(project)
   project_path = File.expand_path(File.join("spec/fixtures/projects", project))
+
+  raise "Fixture does not exist for project: '#{project}'" unless Dir.exist?(project_path)
+
   Dir.chdir(project_path) do
-    files = Dir.glob("**/*")
+    # NOTE: Include dotfiles (e.g. .npmrc)
+    files = Dir.glob("**/*", File::FNM_DOTMATCH)
     files = files.select { |f| File.file?(f) }
     files.map do |filename|
       content = File.read(filename)
@@ -114,14 +133,14 @@ end
 
 # Spec helper to provide GitHub credentials if set via an environment variable
 def github_credentials
-  if ENV["DEPENDABOT_TEST_ACCESS_TOKEN"].nil?
+  if ENV["DEPENDABOT_TEST_ACCESS_TOKEN"].nil? && ENV["LOCAL_GITHUB_ACCESS_TOKEN"].nil?
     []
   else
     [{
       "type" => "git_source",
       "host" => "github.com",
       "username" => "x-access-token",
-      "password" => ENV["DEPENDABOT_TEST_ACCESS_TOKEN"]
+      "password" => ENV["DEPENDABOT_TEST_ACCESS_TOKEN"] || ENV["LOCAL_GITHUB_ACCESS_TOKEN"]
     }]
   end
 end
